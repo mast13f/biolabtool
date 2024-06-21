@@ -5,7 +5,7 @@ import seaborn as sns
 
 
 # volcano plot
-
+# more here: https://resources.qiagenbioinformatics.com/manuals/rnaanalysisportal/current/index.php?manual=Volcano_plot.html
 
 # user input
 x = input('x:')
@@ -21,12 +21,10 @@ def volcano_plot(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_t
     threshold = sig_threshold
     fc_threshold_lower = fc_threshold_lower
     fc_threshold_upper = fc_threshold_upper
-
     plt.scatter(x=data[x_axis], y=data[y_axis], s=1, label="Not significant")
 
-    # highlight down- or up- regulated genes
-    down = data[(data[x_axis] <= -threshold) & (data[y_axis] >= threshold)]
-    up = data[(data[x_axis] >= threshold) & (data[y_axis] >= threshold)]
+    down = data[(data[x_axis] <= fc_threshold_upper) & (data[y_axis] <= threshold)]
+    up = data[(data[x_axis] >= fc_threshold_lower) & (data[y_axis] <= threshold)]
 
     plt.scatter(x=down[x_axis], y=down[y_axis], s=3, label="Down-regulated", color="blue")
     plt.scatter(x=up[x_axis], y=up[y_axis], s=3, label="Up-regulated", color="red")
