@@ -38,7 +38,7 @@ def check_pofi_in_data(pofi, data, name):
                 print(f'{p} not found in the data')
     return valid_pofi
 
-def plot_volcano(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_threshold, show_labels, ns_color, ur_color, dr_color, mark_all, pofi):
+def plot_volcano(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_threshold, show_labels, ns_color, ur_color, dr_color, mark_all, pofi,title):
     
     plt.scatter(x=data[x], y=data[y], s=1, label="Not significant", color=ns_color)
 
@@ -65,6 +65,7 @@ def plot_volcano(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_t
     plt.axhline(sig_threshold, color="grey", linestyle="--")
     if show_labels:
         plt.legend()
+    plt.title(title)
     plt.show()
 
 def main():
@@ -83,7 +84,8 @@ def main():
     mark_all = user_inputs['mark_all']
     pofi = user_inputs['pofi']
     valid_pofi = check_pofi_in_data(pofi, data, name)
-    plot_volcano(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_threshold, show_labels, ns_color, ur_color, dr_color, mark_all, valid_pofi)
+    title = user_inputs['title']
+    plot_volcano(data, x, y, name, fc_threshold_lower, fc_threshold_upper, sig_threshold, show_labels, ns_color, ur_color, dr_color, mark_all, valid_pofi,title)
 
 if __name__ == "__main__":
     main()
