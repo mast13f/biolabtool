@@ -2,6 +2,8 @@
 
 This is a tool set for [Ye He Lab](https://yehelab.org/) at ASRC CUNY. It is designed to help the lab members to manage their data and analysis.
 
+
+## User friendly GUI tool to plot volcano graph
 Functions to be added:
 1. a tool bar that allows to save and load user input profile
 2. better looking
