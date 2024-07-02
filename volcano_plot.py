@@ -1,6 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, colorchooser
-from tkinter import ttk
+from tkinter import filedialog, colorchooser, ttk, messagebox
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -11,69 +10,70 @@ user_inputs = {}
 def get_user_input():
     def browse_file():
         filename = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        data.set(filename)
-        load_columns()
+        if filename:
+            data.set(filename)
+            load_columns()
 
     def load_columns():
-        df = pd.read_csv(data.get())
-        columns = list(df.columns)
-        x.set(columns[0])
-        y.set(columns[1])
-        name.set(columns[2])
-        x_menu['menu'].delete(0, 'end')
-        y_menu['menu'].delete(0, 'end')
-        name_menu['menu'].delete(0, 'end')
-        for col in columns:
-            x_menu['menu'].add_command(label=col, command=tk._setit(x, col))
-            y_menu['menu'].add_command(label=col, command=tk._setit(y, col))
-            name_menu['menu'].add_command(label=col, command=tk._setit(name, col, name_updated))
+        try:
+            df = pd.read_csv(data.get())
+            columns = list(df.columns)
+            x.set(columns[0])
+            y.set(columns[1])
+            name.set(columns[2])
+            update_menu_options(columns)
+            name_updated()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load columns: {e}")
+
+    def update_menu_options(columns):
+        for menu, var in zip([x_menu, y_menu, name_menu], [x, y, name]):
+            menu['menu'].delete(0, 'end')
+            for col in columns:
+                menu['menu'].add_command(label=col, command=tk._setit(var, col))
+        name.trace_add("write", name_updated)  # Update trace to handle changes
 
     def name_updated(*args):
-        df = pd.read_csv(data.get())
-        selected_name_col = name.get()
-        update_points_of_interest_list(df[selected_name_col].values)
+        try:
+            df = pd.read_csv(data.get())
+            selected_name_col = name.get()
+            update_points_of_interest_list(df[selected_name_col].values)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to update points of interest: {e}")
 
     def update_points_of_interest_list(items):
         pofi_listbox.delete(0, tk.END)
         for item in items:
             pofi_listbox.insert(tk.END, item)
 
-    def choose_ns_color():
+    def choose_color(var):
         color_code = colorchooser.askcolor(title="Choose a color")[1]
-        ns_color.set(color_code)
-
-    def choose_ur_color():
-        color_code = colorchooser.askcolor(title="Choose a color")[1]
-        ur_color.set(color_code)
-
-    def choose_dr_color():
-        color_code = colorchooser.askcolor(title="Choose a color")[1]
-        dr_color.set(color_code)
-
-    def choose_poi_color():
-        color_code = colorchooser.askcolor(title="Choose a color")[1]
-        poi_color.set(color_code)
+        if color_code:
+            var.set(color_code)
 
     def submit():
-        selected_pofi = [pofi_listbox.get(i) for i in pofi_listbox.curselection()]
-        global user_inputs
-        user_inputs = {
-            'title': title.get(),
-            'data': pd.read_csv(data.get()),
-            'x': x.get(),
-            'y': y.get(),
-            'name': name.get(),
-            'fc_threshold_lower': float(fc_threshold_lower.get()),
-            'fc_threshold_upper': float(fc_threshold_upper.get()),
-            'sig_threshold': float(sig_threshold.get()),
-            'show_labels': show_labels.get(),
-            'ns_color': ns_color.get(),
-            'ur_color': ur_color.get(),
-            'dr_color': dr_color.get(),
-            'poi_color': poi_color.get(),
-            'pofi': selected_pofi
-        }
-        plot_volcano()
+        try:
+            selected_pofi = [pofi_listbox.get(i) for i in pofi_listbox.curselection()]
+            global user_inputs
+            user_inputs = {
+                'title': title.get(),
+                'data': pd.read_csv(data.get()),
+                'x': x.get(),
+                'y': y.get(),
+                'name': name.get(),
+                'fc_threshold_lower': float(fc_threshold_lower.get()),
+                'fc_threshold_upper': float(fc_threshold_upper.get()),
+                'sig_threshold': float(sig_threshold.get()),
+                'show_labels': show_labels.get(),
+                'ns_color': ns_color.get(),
+                'ur_color': ur_color.get(),
+                'dr_color': dr_color.get(),
+                'poi_color': poi_color.get(),
+                'pofi': selected_pofi
+            }
+            plot_volcano()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to submit inputs: {e}")
 
     root = tk.Tk()
     root.title("User Input")
@@ -104,12 +104,12 @@ def get_user_input():
     input_frame = ttk.Frame(root)
     input_frame.grid(row=0, column=0, sticky="nsew")
 
+    global plot_frame
     plot_frame = ttk.Frame(root)
     plot_frame.grid(row=0, column=1, sticky="nsew")
 
     root.columnconfigure(1, weight=1)
     root.rowconfigure(0, weight=1)
-
     input_frame.columnconfigure(1, weight=1)
 
     ttk.Label(input_frame, text="Plot Title").grid(row=0, column=0, sticky="w")
@@ -144,19 +144,19 @@ def get_user_input():
     
     ttk.Label(input_frame, text="Non-Significant Color").grid(row=9, column=0, sticky="w")
     ttk.Entry(input_frame, textvariable=ns_color).grid(row=9, column=1, sticky="ew")
-    ttk.Button(input_frame, text="Choose Color", command=choose_ns_color).grid(row=9, column=2, sticky="ew")
+    ttk.Button(input_frame, text="Choose Color", command=lambda: choose_color(ns_color)).grid(row=9, column=2, sticky="ew")
 
     ttk.Label(input_frame, text="Upregulated Color").grid(row=10, column=0, sticky="w")
     ttk.Entry(input_frame, textvariable=ur_color).grid(row=10, column=1, sticky="ew")
-    ttk.Button(input_frame, text="Choose Color", command=choose_ur_color).grid(row=10, column=2, sticky="ew")
+    ttk.Button(input_frame, text="Choose Color", command=lambda: choose_color(ur_color)).grid(row=10, column=2, sticky="ew")
 
     ttk.Label(input_frame, text="Downregulated Color").grid(row=11, column=0, sticky="w")
     ttk.Entry(input_frame, textvariable=dr_color).grid(row=11, column=1, sticky="ew")
-    ttk.Button(input_frame, text="Choose Color", command=choose_dr_color).grid(row=11, column=2, sticky="ew")
+    ttk.Button(input_frame, text="Choose Color", command=lambda: choose_color(dr_color)).grid(row=11, column=2, sticky="ew")
 
     ttk.Label(input_frame, text="POI Color").grid(row=12, column=0, sticky="w")
     ttk.Entry(input_frame, textvariable=poi_color).grid(row=12, column=1, sticky="ew")
-    ttk.Button(input_frame, text="Choose Color", command=choose_poi_color).grid(row=12, column=2, sticky="ew")
+    ttk.Button(input_frame, text="Choose Color", command=lambda: choose_color(poi_color)).grid(row=12, column=2, sticky="ew")
 
     ttk.Label(input_frame, text="Points of Interest").grid(row=13, column=0, sticky="w")
     pofi_listbox = tk.Listbox(input_frame, listvariable=points_of_interest, selectmode=tk.MULTIPLE)
@@ -164,7 +164,7 @@ def get_user_input():
 
     ttk.Button(input_frame, text="Submit", command=submit).grid(row=14, column=0, columnspan=3, sticky="ew")
 
-    return root, plot_frame
+    return root
 
 def check_pofi_in_data(pofi, data, name):
     valid_pofi = []
@@ -207,7 +207,7 @@ def plot_volcano():
     texts = []
     for i in range(len(data)):
         if data[name][i] in valid_pofi:
-            ax.scatter(data[x][i], data[y][i], s=10, color=poi_color)  # Highlight POI with a different color
+            ax.scatter(data[x][i], data[y][i], s=10, color=poi_color)
             texts.append(ax.text(data[x][i], data[y][i], data[name][i], fontsize=8, color='black'))
     adjust_text(texts, arrowprops=dict(arrowstyle="-", color='black', lw=0.5))
 
@@ -229,10 +229,8 @@ def plot_volcano():
 
 def main():
     global root
-    global plot_frame
-    root, plot_frame = get_user_input()
+    root = get_user_input()
     root.mainloop()
 
 if __name__ == "__main__":
     main()
-
